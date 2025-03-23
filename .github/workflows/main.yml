@@ -1,21 +1,34 @@
-name: Prisma Cloud Compute Image Scan
+name: CI/CD Pipeline
 
-on: [push, pull_request]
-
-permissions:
-  contents: read
+on:
+  push:
+    branches:
+      - main
+  pull_request:
 
 env:
-  PRISMA_CLOUD_URL: "https://api3.prismacloud.io"
-  DOCKER_IMAGE: "ghcr.io/${{ github.repository }}/apache-app:latest"
-
+  PRISMA_CLOUD_URL: "https://api3.prismacloud.io/"
+  DOCKER_IMAGE: "ghcr.io/YOUR_GITHUB_USERNAME/apache-app:latest"
+  K8S_DEPLOYMENT_FILE: "./k8s/deployment.yaml"
+#  TL_CONSOLE: https://us-west1.cloud.twistlock.com/us-3-159214132
+#  PRISMA_PASSWORD: cquIBH9Ji4UK7INm8S6hW0lvTg=
+#  PRISMA_USER: 70a6763a-102f-4a4c-ab4a-afde016c5089  
+  
 jobs:
-  build-and-scan:
-    name: Build and scan image
+  security_scan:
+    name: Run Checkov Scan
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the repository
+      - name: Checkout Repository
         uses: actions/checkout@v2
+
+      - name: Run Checkov Scan
+        uses: bridgecrewio/checkov-action@master
+        env:
+          PRISMA_API_URL: $PRISMA_CLOUD_URL
+        with:
+          api-key: $PRISMA_USER::$PRISMA_PASSWORD
+
 
       - name: Set Up Docker
         run: |
@@ -24,20 +37,29 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t ${{ env.DOCKER_IMAGE }} .
-          docker tag ${{ env.DOCKER_IMAGE }} ${{ env.DOCKER_IMAGE }}
+          docker build -t $DOCKER_IMAGE .
+          docker tag $DOCKER_IMAGE ghcr.io/${{ github.repository }}/apache-app:latest
 
-      - name: Download twistcli from the Prisma Cloud Compute Console
+      - name: Download and Configure TwistCLI
         run: |
-          curl --insecure --user ${{ secrets.TL_USER }}:${{ secrets.TL_PASS }} --output ./twistcli https://${{ secrets.PATH_TO_CONSOLE }}/api/v1/util/twistcli
-          chmod a+x ./twistcli
+          curl -k -u $TL_USER:$TL_PASS --output ./twistcli https://$TL_CONSOLE/api/v1/util/twistcli
+          chmod +x twistcli
 
-      - name: Scan the image
+      - name: Run TwistCLI Image Scan
         run: |
-          ./twistcli images scan --address https://${{ secrets.PATH_TO_CONSOLE }} \
-                                 --user ${{ secrets.TL_USER }} \
-                                 --password ${{ secrets.TL_PASS }} \
-                                 --details ${{ env.DOCKER_IMAGE }}
+          ./twistcli images scan --address $PRISMA_CLOUD_URL \
+                                 --user $PRISMA_USER \
+                                 --password $PRISMA_PASSWORD \
+                                 --details \
+                                 ghcr.io/${{ github.repository }}/apache-app:latest
+
+      - name: Run Prisma Cloud Sandbox Scan
+        run: |
+          ./twistcli sandbox --address $PRISMA_CLOUD_URL \
+                             --user $PRISMA_USER \
+                             --password $PRISMA_PASSWORD \
+                             --image ghcr.io/${{ github.repository }}/apache-app:latest
+
 
 
 
