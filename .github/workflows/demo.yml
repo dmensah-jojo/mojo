@@ -1,0 +1,34 @@
+name: Prisma Cloud Compute Image Scan
+
+on: [push, pull_request]
+
+jobs:
+  # Jobs are ran independently from each other, so build and scan needs to be in a single job.
+  build-and-scan:
+    name: Build and scan image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+        # Defaults are sufficient generally
+        # https://github.com/actions/checkout#usage
+
+      - name: Set Up Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+
+      - name: Build Docker Image
+        run: |
+          docker build -t ${{ env.DOCKER_IMAGE }} .
+          docker tag ${{ env.DOCKER_IMAGE }} ghcr.io/${{ github.repository }}/apache-app:latest
+
+    
+      - name: Download twistcli from the Prisma Cloud Compute Console
+        run: |
+          curl --insecure --user ${{ secrets.TL_USER }}:${{ secrets.TL_PASS }} --output ./twistcli ${{ secrets.PATH_TO_CONSOLE }}/api/v1/util/twistcli
+          chmod a+x ./twistcli
+          
+      - name: Scan the image
+        run: ./twistcli images scan --address ${{ secrets.PATH_TO_CONSOLE }} --user ${{ secrets.TL_PASS }} --password ${{ secrets.TL_PASS }} --details $IMAGE_NAME
