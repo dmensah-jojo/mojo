@@ -27,7 +27,7 @@ jobs:
         env:
           PRISMA_API_URL: https://us-west1.cloud.twistlock.com/us-3-159214132
         with:
-          api-key: 70a6763a-102f-4a4c-ab4a-afde016c5089::cquIBH9Ji4UK7INm8S6hW0lvTg=
+          api-key: 70a6763a-102f-4a4c-ab4a-afde016c5089::/cquIBH9Ji4UK7INm8S6hW0lvTg=
 
   build:
     name: Build Docker Image
@@ -61,7 +61,7 @@ jobs:
           chmod +x twistcli
 
           TCLI_VERSION=$(./twistcli --version | awk '{print $2}')
-          CONSOLE_VERSION=$(curl -sk -u "70a6763a-102f-4a4c-ab4a-afde016c5089:cquIBH9Ji4UK7INm8S6hW0lvTg=" https://us-west1.cloud.twistlock.com/us-3-159214132/api/v1/version | jq -r '.version')
+          CONSOLE_VERSION=$(curl -sk -u "70a6763a-102f-4a4c-ab4a-afde016c5089:/cquIBH9Ji4UK7INm8S6hW0lvTg=" https://us-west1.cloud.twistlock.com/us-3-159214132/api/v1/version | jq -r '.version')
 
           echo "TCLI_VERSION = $TCLI_VERSION"
           echo "CONSOLE_VERSION = $CONSOLE_VERSION"
@@ -76,7 +76,7 @@ jobs:
         run: |
           ./twistcli images scan --address https://us-west1.cloud.twistlock.com/us-3-159214132 \
                                  --user 70a6763a-102f-4a4c-ab4a-afde016c5089 \
-                                 --password cquIBH9Ji4UK7INm8S6hW0lvTg= \
+                                 --password /cquIBH9Ji4UK7INm8S6hW0lvTg= \
                                  --details \
                                  ${{ env.DOCKER_IMAGE }}
 
@@ -84,6 +84,6 @@ jobs:
         run: |
           ./twistcli sandbox --address https://us-west1.cloud.twistlock.com/us-3-159214132 \
                              --user 70a6763a-102f-4a4c-ab4a-afde016c5089 \
-                             --password cquIBH9Ji4UK7INm8S6hW0lvTg= \
+                             --password /cquIBH9Ji4UK7INm8S6hW0lvTg= \
                              --token ${{ secrets.TOKEN }} \
                              --${{ env.DOCKER_IMAGE }}
