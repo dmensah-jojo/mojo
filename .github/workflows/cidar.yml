@@ -1,0 +1,45 @@
+name: CI/CD Pipeline with Prisma Cloud
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  scan:
+    name: Prisma Cloud Scans
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Check TwistCLI Version and Update if Needed
+        run: |
+          curl -sSL -o twistcli https://${{ secrets.TL_CONSOLE }}/download/cli/latest/twistcli
+          chmod +x twistcli
+
+          TCLI_VERSION=$(./twistcli | grep -A1 VERSION | sed 1d | tr -d '"')
+          CONSOLE_VERSION=$(curl -sk -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" https://${{ secrets.TL_CONSOLE }}/api/v1/version | tr -d '"')
+
+          echo "TCLI_VERSION = $TCLI_VERSION"
+          echo "CONSOLE_VERSION = $CONSOLE_VERSION"
+
+          if [[ "$TCLI_VERSION" != "$CONSOLE_VERSION" ]]; then
+            echo "Downloading latest TwistCLI..."
+            curl -sk -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" --output twistcli https://${{ secrets.TL_CONSOLE }}/api/v1/util/twistcli
+            chmod +x twistcli
+          fi
+
+      - name: Run TwistCLI Image Scan
+        run: |
+          ./twistcli images scan --address https://${{ secrets.TL_CONSOLE }} \
+                                 -u ${{ secrets.TL_USER }} \
+                                 -p ${{ secrets.TL_PASS }} \
+                                 --details ghcr.io/${{ github.repository }}/apache-app:latest
+
+      - name: Run Image Analysis Sandbox Scan
+        run: |
+          curl -X POST -k -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" \
+            -H "Content-Type: application/json" \
+            -d '{"source": "ci-pipeline", "image_name": "ghcr.io/${{ github.repository }}/apache-app:latest"}' \
+            https://${{ secrets.TL_CONSOLE }}/api/v1/sandbox/enqueue
