@@ -57,7 +57,7 @@ jobs:
 
       - name: Download and Configure TwistCLI
         run: |
-          curl -sSL -o twistcli https://api3.prismacloud.io/download/cli/latest/twistcli
+          curl -sSL -o twistcli https://us-west1.cloud.twistlock.com/us-3-159214132/cli/latest/twistcli
           chmod +x twistcli
 
           TCLI_VERSION=$(./twistcli --version | awk '{print $2}')
