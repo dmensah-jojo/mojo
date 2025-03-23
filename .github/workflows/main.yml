@@ -6,6 +6,9 @@ on:
       - main
   pull_request:
 
+permissions: # 🔥 Explicitly set permissions to avoid 'write-all'
+  contents: read
+
 env:
   PRISMA_CLOUD_URL: "https://api3.prismacloud.io"
   DOCKER_IMAGE: "ghcr.io/${{ github.repository }}/apache-app:latest"
@@ -54,18 +57,18 @@ jobs:
 
       - name: Download and Configure TwistCLI
         run: |
-          curl -sSL -o twistcli https://api3.prismacloud.iodownload/cli/latest/twistcli
+          curl -sSL -o twistcli https://${{ secrets.TL_CONSOLE }}/download/cli/latest/twistcli
           chmod +x twistcli
 
-          TCLI_VERSION=$(./twistcli | grep -A1 VERSION | sed 1d | tr -d '"')
-          CONSOLE_VERSION=$(curl -sk -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" https://${{ secrets.TL_CONSOLE }}/api/v1/version | tr -d '"')
+          TCLI_VERSION=$(./twistcli --version | awk '{print $2}')
+          CONSOLE_VERSION=$(curl -sk -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" https://${{ secrets.TL_CONSOLE }}/api/v1/version | jq -r '.version')
 
           echo "TCLI_VERSION = $TCLI_VERSION"
           echo "CONSOLE_VERSION = $CONSOLE_VERSION"
 
           if [[ "$TCLI_VERSION" != "$CONSOLE_VERSION" ]]; then
             echo "Downloading latest TwistCLI..."
-            curl -sk -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" --output twistcli https://${{ secrets.TL_CONSOLE }}/api/v1/util/twistcli
+            curl -sk -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" -o twistcli https://${{ secrets.TL_CONSOLE }}/api/v1/util/twistcli
             chmod +x twistcli
           fi
 
