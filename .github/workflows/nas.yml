@@ -34,10 +34,15 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Set Up Docker
+      - name: Remove conflicting containerd package
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
+          sudo apt-get remove -y containerd || true
+
+      - name: Install Docker
+        run: |
+          curl -fsSL https://get.docker.com | sudo sh
+          sudo systemctl start docker
+          sudo systemctl enable docker
 
       - name: Build Docker Image
         run: |
@@ -56,13 +61,10 @@ jobs:
         run: |
           curl -sSL -o twistcli https://${{ secrets.TL_CONSOLE }}/download/cli/latest/twistcli
           chmod +x twistcli
-
           TCLI_VERSION=$(./twistcli | grep -A1 VERSION | sed 1d | tr -d '"')
           CONSOLE_VERSION=$(curl -sk -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" https://${{ secrets.TL_CONSOLE }}/api/v1/version | tr -d '"')
-
           echo "TCLI_VERSION = $TCLI_VERSION"
           echo "CONSOLE_VERSION = $CONSOLE_VERSION"
-
           if [[ "$TCLI_VERSION" != "$CONSOLE_VERSION" ]]; then
             echo "Downloading latest TwistCLI..."
             curl -sk -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" --output twistcli https://${{ secrets.TL_CONSOLE }}/api/v1/util/twistcli
@@ -85,7 +87,4 @@ jobs:
                              --token ${{ secrets.TOKEN }} \
                              --image ${{ env.DOCKER_IMAGE }}
 
-  
-
-      - name: Deploy to Kubernetes
-        run: kubectl apply -f $K8S_DEPLOYMENT_FILE
+    
