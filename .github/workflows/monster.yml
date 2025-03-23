@@ -1,7 +1,7 @@
 
 name: Prisma Cloud Compute Image Scan
 
-on: [push]
+on: [push,pull requst]
 
 #env:
 #  IMAGE_NAME: ${{ github.repository }}:${{ github.sha }}
