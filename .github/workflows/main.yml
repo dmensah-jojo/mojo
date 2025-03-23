@@ -1,40 +1,20 @@
-name: CI/CD Pipeline
+name: Prisma Cloud Compute Image Scan
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
+on: [push, pull_request]
 
-permissions: # 🔥 Explicitly set permissions to avoid 'write-all'
+permissions:
   contents: read
 
 env:
   PRISMA_CLOUD_URL: "https://api3.prismacloud.io"
   DOCKER_IMAGE: "ghcr.io/${{ github.repository }}/apache-app:latest"
-  K8S_DEPLOYMENT_FILE: "./k8s/deployment.yaml"
 
 jobs:
-  security_scan:
-    name: Run Checkov Scan
+  build-and-scan:
+    name: Build and scan image
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
-
-      - name: Run Checkov Scan
-        uses: bridgecrewio/checkov-action@master
-        env:
-          PRISMA_API_URL: ${{ env.PRISMA_CLOUD_URL }}
-        with:
-          api-key: ${{ secrets.BC_API_KEY }}
-
-  build:
-    name: Build Docker Image
-    runs-on: ubuntu-latest
-    needs: security_scan
-    steps:
-      - name: Checkout Repository
+      - name: Check out the repository
         uses: actions/checkout@v2
 
       - name: Set Up Docker
@@ -45,47 +25,19 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build -t ${{ env.DOCKER_IMAGE }} .
-          docker tag ${{ env.DOCKER_IMAGE }} ghcr.io/${{ github.repository }}/apache-app:latest
+          docker tag ${{ env.DOCKER_IMAGE }} ${{ env.DOCKER_IMAGE }}
 
-  scan:
-    name: Run Prisma Cloud Scans
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
-
-      - name: Download and Configure TwistCLI
+      - name: Download twistcli from the Prisma Cloud Compute Console
         run: |
-          curl --insecure --user ${{ secrets.TL_USER }}:${{ secrets.TL_PASS }} --output ./twistcli ${{ secrets.PATH_TO_CONSOLE }}/api/v1/util/twistcli
+          curl --insecure --user ${{ secrets.TL_USER }}:${{ secrets.TL_PASS }} --output ./twistcli https://${{ secrets.PATH_TO_CONSOLE }}/api/v1/util/twistcli
           chmod a+x ./twistcli
 
-          TCLI_VERSION=$(./twistcli --version | awk '{print $2}')
-          CONSOLE_VERSION=$(curl -sk -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" https://${{ secrets.PATH_TO_CONSOLE }}/api/v1/version | jq -r '.version')
-
-          echo "TCLI_VERSION = $TCLI_VERSION"
-          echo "CONSOLE_VERSION = $CONSOLE_VERSION"
-
-          if [[ "$TCLI_VERSION" != "$CONSOLE_VERSION" ]]; then
-            echo "Downloading latest TwistCLI..."
-            curl -sk -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" -o twistcli https://${{ secrets.PATH_TO_CONSOLE }}/api/v1/util/twistcli
-            chmod +x twistcli
-          fi
-
-      - name: Run TwistCLI Image Scan
+      - name: Scan the image
         run: |
           ./twistcli images scan --address https://${{ secrets.PATH_TO_CONSOLE }} \
                                  --user ${{ secrets.TL_USER }} \
                                  --password ${{ secrets.TL_PASS }} \
-                                 --details \
-                                 ${{ env.DOCKER_IMAGE }}
+                                 --details ${{ env.DOCKER_IMAGE }}
 
-      - name: Run Prisma Cloud Sandbox Scan
-        run: |
-          ./twistcli sandbox --address https://${{ secrets.PATH_TO_CONSOLE }} \
-                             --user ${{ secrets.TL_USER }} \
-                             --password ${{ secrets.TL_PASS }} \
-                             --token ${{ secrets.TOKEN }} \
-                             --image ${{ env.DOCKER_IMAGE }}
 
 
