@@ -8,7 +8,7 @@ on:
 
 env:
   PRISMA_CLOUD_URL: "https://api3.prismacloud.io"
-  DOCKER_IMAGE: "ghcr.io/dmensah-jojo/apache-app:latest"
+  DOCKER_IMAGE: "ghcr.io/${{ github.repository }}/apache-app:latest"
   K8S_DEPLOYMENT_FILE: "./k8s/deployment.yaml"
 
 jobs:
@@ -22,7 +22,7 @@ jobs:
       - name: Run Checkov Scan
         uses: bridgecrewio/checkov-action@master
         env:
-          PRISMA_API_URL: https://api3.prismacloud.io 
+          PRISMA_API_URL: ${{ env.PRISMA_CLOUD_URL }}
         with:
           api-key: ${{ secrets.BC_API_KEY }}
 
@@ -41,8 +41,8 @@ jobs:
 
       - name: Build Docker Image
         run: |
-          docker build -t $DOCKER_IMAGE .
-          docker tag $DOCKER_IMAGE ghcr.io/${{ github.repository }}/apache-app:latest
+          docker build -t ${{ env.DOCKER_IMAGE }} .
+          docker tag ${{ env.DOCKER_IMAGE }} ghcr.io/${{ github.repository }}/apache-app:latest
 
   scan:
     name: Run Prisma Cloud Scans
@@ -53,7 +53,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Download and Configure TwistCLI
-         run: |
+        run: |
           curl -sSL -o twistcli https://${{ secrets.TL_CONSOLE }}/download/cli/latest/twistcli
           chmod +x twistcli
 
@@ -71,18 +71,18 @@ jobs:
 
       - name: Run TwistCLI Image Scan
         run: |
-          ./twistcli images scan --address ${{ secrets.TL_CONSOLE }} \
+          ./twistcli images scan --address https://${{ secrets.TL_CONSOLE }} \
                                  --user ${{ secrets.TL_USER }} \
                                  --password ${{ secrets.TL_PASS }} \
                                  --details \
-                                 ghcr.io/${{ github.repository }}/apache-app:latest
+                                 ${{ env.DOCKER_IMAGE }}
 
       - name: Run Prisma Cloud Sandbox Scan
         run: |
-          ./twistcli sandbox --address ${{ secrets.TL_CONSOLE }} \
+          ./twistcli sandbox --address https://${{ secrets.TL_CONSOLE }} \
                              --user ${{ secrets.TL_USER }} \
                              --password ${{ secrets.TL_PASS }} \
                              --token ${{ secrets.TOKEN }} \
-                             --image ghcr.io/${{ github.repository }}/apache-app:latest
+                             --image ${{ env.DOCKER_IMAGE }}
 
 
