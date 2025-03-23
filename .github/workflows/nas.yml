@@ -34,9 +34,12 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Remove conflicting containerd package
+      - name: Verify Dockerfile Exists
         run: |
-          sudo apt-get remove -y containerd || true
+          if [ ! -f Dockerfile ]; then
+            echo "ERROR: Dockerfile not found in the repository root!"
+            exit 1
+          fi
 
       - name: Install Docker
         run: |
@@ -86,5 +89,9 @@ jobs:
                              --password ${{ secrets.TL_PASS }} \
                              --token ${{ secrets.TOKEN }} \
                              --image ${{ env.DOCKER_IMAGE }}
+
+      - name: Deploy to Kubernetes
+        run: kubectl apply -f $K8S_DEPLOYMENT_FILE
+
 
     
