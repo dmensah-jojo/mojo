@@ -57,24 +57,24 @@ jobs:
 
       - name: Download and Configure TwistCLI
         run: |
-          curl --insecure --user ${{ secrets.TL_USER }}:${{ secrets.TL_PASS }} --output ./twistcli ${{ secrets.TL_CONSOLE }}/api/v1/util/twistcli
+          curl --insecure --user ${{ secrets.TL_USER }}:${{ secrets.TL_PASS }} --output ./twistcli ${{ secrets.PATH_TO_CONSOLE }}/api/v1/util/twistcli
           chmod a+x ./twistcli
 
           TCLI_VERSION=$(./twistcli --version | awk '{print $2}')
-          CONSOLE_VERSION=$(curl -sk -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" https://${{ secrets.TL_CONSOLE }}/api/v1/version | jq -r '.version')
+          CONSOLE_VERSION=$(curl -sk -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" https://${{ secrets.PATH_TO_CONSOLE }}/api/v1/version | jq -r '.version')
 
           echo "TCLI_VERSION = $TCLI_VERSION"
           echo "CONSOLE_VERSION = $CONSOLE_VERSION"
 
           if [[ "$TCLI_VERSION" != "$CONSOLE_VERSION" ]]; then
             echo "Downloading latest TwistCLI..."
-            curl -sk -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" -o twistcli https://${{ secrets.TL_CONSOLE }}/api/v1/util/twistcli
+            curl -sk -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" -o twistcli https://${{ secrets.PATH_TO_CONSOLE }}/api/v1/util/twistcli
             chmod +x twistcli
           fi
 
       - name: Run TwistCLI Image Scan
         run: |
-          ./twistcli images scan --address https://${{ secrets.TL_CONSOLE }} \
+          ./twistcli images scan --address https://${{ secrets.PATH_TO_CONSOLE }} \
                                  --user ${{ secrets.TL_USER }} \
                                  --password ${{ secrets.TL_PASS }} \
                                  --details \
@@ -82,7 +82,7 @@ jobs:
 
       - name: Run Prisma Cloud Sandbox Scan
         run: |
-          ./twistcli sandbox --address https://${{ secrets.TL_CONSOLE }} \
+          ./twistcli sandbox --address https://${{ secrets.PATH_TO_CONSOLE }} \
                              --user ${{ secrets.TL_USER }} \
                              --password ${{ secrets.TL_PASS }} \
                              --token ${{ secrets.TOKEN }} \
