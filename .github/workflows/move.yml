@@ -1,0 +1,89 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions: # 🔥 Explicitly set permissions to avoid 'write-all'
+  contents: read
+
+env:
+  PRISMA_CLOUD_URL: "https://api3.prismacloud.io"
+  DOCKER_IMAGE: "ghcr.io/${{ github.repository }}/apache-app:latest"
+  K8S_DEPLOYMENT_FILE: "./k8s/deployment.yaml"
+
+jobs:
+  security_scan:
+    name: Run Checkov Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Run Checkov Scan
+        uses: bridgecrewio/checkov-action@master
+        env:
+          PRISMA_API_URL: https://us-west1.cloud.twistlock.com/us-3-159214132
+        with:
+          api-key: 70a6763a-102f-4a4c-ab4a-afde016c5089::cquIBH9Ji4UK7INm8S6hW0lvTg=
+
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: security_scan
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set Up Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+
+      - name: Build Docker Image
+        run: |
+          docker build -t ${{ env.DOCKER_IMAGE }} .
+          docker tag ${{ env.DOCKER_IMAGE }} ghcr.io/${{ github.repository }}/apache-app:latest
+
+  scan:
+    name: Run Prisma Cloud Scans
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Download and Configure TwistCLI
+        run: |
+          curl -sSL -o twistcli https://us-west1.cloud.twistlock.com/us-3-159214132/download/cli/latest/twistcli
+          chmod +x twistcli
+
+          TCLI_VERSION=$(./twistcli --version | awk '{print $2}')
+          CONSOLE_VERSION=$(curl -sk -u "70a6763a-102f-4a4c-ab4a-afde016c5089:cquIBH9Ji4UK7INm8S6hW0lvTg=" https://us-west1.cloud.twistlock.com/us-3-159214132/api/v1/version | jq -r '.version')
+
+          echo "TCLI_VERSION = $TCLI_VERSION"
+          echo "CONSOLE_VERSION = $CONSOLE_VERSION"
+
+          if [[ "$TCLI_VERSION" != "$CONSOLE_VERSION" ]]; then
+            echo "Downloading latest TwistCLI..."
+            curl -sk -u "70a6763a-102f-4a4c-ab4a-afde016c5089:cquIBH9Ji4UK7INm8S6hW0lvTg=" -o twistcli https://us-west1.cloud.twistlock.com/us-3-159214132/api/v1/util/twistcli
+            chmod +x twistcli
+          fi
+
+      - name: Run TwistCLI Image Scan
+        run: |
+          ./twistcli images scan --address https://us-west1.cloud.twistlock.com/us-3-159214132 \
+                                 --user 70a6763a-102f-4a4c-ab4a-afde016c5089 \
+                                 --password cquIBH9Ji4UK7INm8S6hW0lvTg= \
+                                 --details \
+                                 ${{ env.DOCKER_IMAGE }}
+
+      - name: Run Prisma Cloud Sandbox Scan
+        run: |
+          ./twistcli sandbox --address https://us-west1.cloud.twistlock.com/us-3-159214132 \
+                             --user 70a6763a-102f-4a4c-ab4a-afde016c5089 \
+                             --password cquIBH9Ji4UK7INm8S6hW0lvTg= \
+                             --token ${{ secrets.TOKEN }} \
+                             --${{ env.DOCKER_IMAGE }}
