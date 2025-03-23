@@ -3,16 +3,20 @@ name: Prisma Cloud Compute Image Scan
 on: [push, pull_request]
 
 jobs:
-  # Jobs are ran independently from each other, so build and scan needs to be in a single job.
   build-and-scan:
-    name: Build and scan image
+    name: Build and Scan Image
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read # 🔥 Explicitly set permissions to avoid 'write-all'
+
+    env:
+      PRISMA_CLOUD_URL: "https://api3.prismacloud.io"
+      DOCKER_IMAGE: "ghcr.io/${{ github.repository }}/apache-app:latest"
 
     steps:
       - name: Check out the repository
         uses: actions/checkout@v2
-        # Defaults are sufficient generally
-        # https://github.com/actions/checkout#usage
 
       - name: Set Up Docker
         run: |
@@ -24,11 +28,17 @@ jobs:
           docker build -t ${{ env.DOCKER_IMAGE }} .
           docker tag ${{ env.DOCKER_IMAGE }} ghcr.io/${{ github.repository }}/apache-app:latest
 
-    
-      - name: Download twistcli from the Prisma Cloud Compute Console
+      - name: Download TwistCLI from Prisma Cloud Compute Console
         run: |
-          curl --insecure --user ${{ secrets.TL_USER }}:${{ secrets.TL_PASS }} --output ./twistcli ${{ secrets.PATH_TO_CONSOLE }}/api/v1/util/twistcli
+          curl --insecure --user ${{ secrets.TL_USER }}:${{ secrets.TL_PASS }} \
+               --output ./twistcli \
+               ${{ secrets.PATH_TO_CONSOLE }}/api/v1/util/twistcli
           chmod a+x ./twistcli
-          
-      - name: Scan the image
-        run: ./twistcli images scan --address ${{ secrets.PATH_TO_CONSOLE }} --user ${{ secrets.TL_PASS }} --password ${{ secrets.TL_PASS }} --details $IMAGE_NAME
+
+      - name: Scan the Image
+        run: |
+          ./twistcli images scan --address ${{ secrets.PATH_TO_CONSOLE }} \
+                                 --user ${{ secrets.TL_USER }} \
+                                 --password ${{ secrets.TL_PASS }} \
+                                 --details \
+                                 ${{ env.DOCKER_IMAGE }}
