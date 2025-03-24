@@ -1,0 +1,62 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+env:
+  PRISMA_CLOUD_URL: "https://api3.prismacloud.io"
+#  K8S_DEPLOYMENT_FILE: "./k8s/deployment.yaml"
+
+jobs:
+  security_scan:
+    name: Run Checkov Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Run Checkov Scan
+        uses: bridgecrewio/checkov-action@master
+        env:
+          PRISMA_API_URL: https://api3.prismacloud.io
+        with:
+          api-key: ${{ secrets.BC_API_KEY }}
+
+  scan:
+    name: Run Prisma Cloud Scans
+    runs-on: ubuntu-latest
+    needs: security_scan
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Pull Ubuntu Image
+        run: |
+          docker pull ubuntu:latest
+          docker run --rm ubuntu:latest echo "Ubuntu container ready for scanning"
+
+      - name: Download and Configure TwistCLI
+        run: |
+          curl -sSL -o twistcli https://us-west1.cloud.twistlock.com/us-3-159214132/download/cli/latest/twistcli
+          chmod +x twistcli
+
+      - name: Run TwistCLI Image Scan
+        run: |
+          ./twistcli images scan --address ${{ secrets.PATH_TO_CONSOLE }} \
+                                 --user ${{ secrets.TL_USER }} \
+                                 --password ${{ secrets.TL_PASS }} \
+                                 --details \
+                                 ubuntu:latest
+
+      - name: Run Prisma Cloud Sandbox Scan
+        run: |
+          ./twistcli sandbox --address ${{ secrets.PATH_TO_CONSOLE }} \
+                             --user ${{ secrets.TL_USER }} \
+                             --password ${{ secrets.TL_PASS }} \
+                             --token ${{ secrets.PCC_API_TOKEN }} \
+                             ubuntu:latest
+
+
