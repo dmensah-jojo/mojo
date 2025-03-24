@@ -39,16 +39,15 @@ jobs:
 
       - name: Download and Configure TwistCLI
         run: |
-          curl -sSL -o twistcli https://us-west1.cloud.twistlock.com/us-3-159214132/download/cli/latest/twistcli
-          chmod +x twistcli
+          curl -k -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" --output twistcli https://us-west1.cloud.twistlock.com/us-3-159214132/api/v1/util/twistcli
+          sudo chmod +x twistcli
           TCLI_VERSION=$(./twistcli | grep -A1 VERSION | sed 1d | tr -d '"')
           CONSOLE_VERSION=$(curl -sk -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" https://us-west1.cloud.twistlock.com/us-3-159214132/api/v1/version | tr -d '"')
           echo "TCLI_VERSION = $TCLI_VERSION"
           echo "CONSOLE_VERSION = $CONSOLE_VERSION"
           if [[ "$TCLI_VERSION" != "$CONSOLE_VERSION" ]]; then
             echo "Downloading latest TwistCLI..."
-            curl -sk -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" --output twistcli https://us-west1.cloud.twistlock.com/us-3-159214132/api/v1/util/twistcli
-            chmod +x twistcli
+            
             ./twistcli images scan --address https://us-west1.cloud.twistlock.com/us-3-159214132 --user 990c91e1-7ec0-4e59-878d-e793df85534b --password uDqCu9r+IsbqcISdG5FeYFddHzw= 
             --details ubuntu:latest    
             sudo ./twistcli sandbox --address https://api3.prismacloud.io \
