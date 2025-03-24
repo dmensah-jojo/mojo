@@ -1,45 +1,60 @@
-name: CI/CD Pipeline with Prisma Cloud
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
       - main
+  pull_request:
+
+env:
+  PRISMA_CLOUD_URL: "https://api3.prismacloud.io"
 
 jobs:
-  scan:
-    name: Prisma Cloud Scans
+  security_scan:
+    name: Run Checkov Scan
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Check TwistCLI Version and Update if Needed
+      - name: Run Checkov Scan
+        uses: bridgecrewio/checkov-action@master
+        env:
+          PRISMA_API_URL: ${{ env.PRISMA_CLOUD_URL }}
+        with:
+          api-key: ${{ secrets.BC_API_KEY }}
+
+  scan:
+    name: Run Prisma Cloud Scans
+    runs-on: ubuntu-latest
+    needs: security_scan
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Pull Ubuntu Image
         run: |
-          curl -sSL -o twistcli https://${{ secrets.PATH_TO_CONSOLE }}/cli/latest/twistcli
+          docker pull ubuntu:latest
+          docker run --rm ubuntu:latest echo "Ubuntu container ready for scanning"
+
+      - name: Download and Configure TwistCLI
+        run: |
+          curl -sSL -o twistcli https://us-west1.cloud.twistlock.com/us-3-159214132/download/cli/latest/twistcli
           chmod +x twistcli
-
-          TCLI_VERSION=$(./twistcli | grep -A1 VERSION | sed 1d | tr -d '"')
-          CONSOLE_VERSION=$(curl -sk -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" https://${{ secrets.PATH_TO_CONSOLE }}/api/v1/version | tr -d '"')
-
-          echo "TCLI_VERSION = $TCLI_VERSION"
-          echo "CONSOLE_VERSION = $CONSOLE_VERSION"
-
-          if [[ "$TCLI_VERSION" != "$CONSOLE_VERSION" ]]; then
-            echo "Downloading latest TwistCLI..."
-            curl -sk -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" --output twistcli https://${{ secrets.PATH_TO_CONSOLE }}/api/v1/util/twistcli
-            chmod +x twistcli
-          fi
 
       - name: Run TwistCLI Image Scan
         run: |
-          ./twistcli images scan --address https://${{ secrets.PATH_TO_CONSOLE }} \
-                                 -u ${{ secrets.TL_USER }} \
-                                 -p ${{ secrets.TL_PASS }} \
-                                 --details ghcr.io/${{ github.repository }}/apache-app:latest
+          ./twistcli images scan --address ${{ env.PRISMA_CLOUD_URL }} \
+                                 --user ${{ secrets.TL_USER }} \
+                                 --password ${{ secrets.TL_PASS }} \
+                                 --details \
+                                 ubuntu:latest
 
-      - name: Run Image Analysis Sandbox Scan
+      - name: Run Prisma Cloud Sandbox Scan
         run: |
-          curl -X POST -k -u "${{ secrets.TL_USER }}:${{ secrets.TL_PASS }}" \
-            -H "Content-Type: application/json" \
-            -d '{"source": "ci-pipeline", "image_name": "ghcr.io/${{ github.repository }}/apache-app:latest"}' \
-            https://${{ secrets.PATH_TO_CONSOLE}}/api/v1/sandbox/enqueue
+          ./twistcli sandbox --address ${{ env.PRISMA_CLOUD_URL }} \
+                             --user ${{ secrets.TL_USER }} \
+                             --password ${{ secrets.TL_PASS }} \
+                             --token ${{ secrets.PCC_API_TOKEN }} \
+                             ubuntu:latest
+
