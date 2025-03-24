@@ -7,7 +7,7 @@ on:
   pull_request:
 
 env:
-  PRISMA_CLOUD_URL: "https://api3.prismacloud.io"
+  PRISMA_CLOUD_URL: "https://us-west1.cloud.twistlock.com/us-3-159214132"
 
 jobs:
   security_scan:
