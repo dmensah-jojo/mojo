@@ -56,5 +56,16 @@ jobs:
 
       - name: Run Prisma Cloud Sandbox Scan
         run: |
-          sudo ./twistcli sandbox --address https://us-west1.cloud.twistlock.com/us-3-159214132 --token ${{ secrets.TOKEN }}--analysis-duration 10s ubuntu:latest           
+          IMAGE_NAME="ubuntu:latest"
+          OUTPUT_FILE="${{ github.workspace }}/output.log"
+
+          sudo ./twistcli sandbox --address ${{ secrets.PCC_CONSOLE_URL }} --token ${{ secrets.PCC_API_TOKEN }} --user ${{ secrets.PCC_USER }} --password ${{ secrets.PCC_PASS }} --analysis-duration 10s --exit-on-error $IMAGE_NAME | tee $OUTPUT_FILE
+
+          if grep -i 'Sandbox analysis verdict: FAIL' $OUTPUT_FILE; then
+            echo "The dynamic image analysis result is FAIL."
+            exit 1
+          else
+            echo "The dynamic image analysis result is PASS."
+          fi
+
              
