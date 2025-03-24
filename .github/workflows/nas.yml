@@ -7,8 +7,7 @@ on:
   pull_request:
 
 env:
-  PRISMA_CLOUD_URL: "https://YOUR_PRISMA_CLOUD_URL"
-#  K8S_DEPLOYMENT_FILE: "./k8s/deployment.yaml"
+  PRISMA_CLOUD_URL: "https://api3.prismacloud.io"
 
 jobs:
   security_scan:
@@ -21,7 +20,7 @@ jobs:
       - name: Run Checkov Scan
         uses: bridgecrewio/checkov-action@master
         env:
-          PRISMA_API_URL: https://api3.prismacloud.io
+          PRISMA_API_URL: ${{ env.PRISMA_CLOUD_URL }}
         with:
           api-key: ${{ secrets.BC_API_KEY }}
 
@@ -40,12 +39,12 @@ jobs:
 
       - name: Download and Configure TwistCLI
         run: |
-          curl -sSL -o twistcli https://${{PATH_TO_CONSOLE}}/download/cli/latest/twistcli
+          curl -sSL -o twistcli https://us-west1.cloud.twistlock.com/us-3-159214132/download/cli/latest/twistcli
           chmod +x twistcli
 
       - name: Run TwistCLI Image Scan
         run: |
-          ./twistcli images scan --address $PRISMA_CLOUD_URL \
+          ./twistcli images scan --address ${{ env.PRISMA_CLOUD_URL }} \
                                  --user ${{ secrets.TL_USER }} \
                                  --password ${{ secrets.TL_PASS }} \
                                  --details \
@@ -53,9 +52,9 @@ jobs:
 
       - name: Run Prisma Cloud Sandbox Scan
         run: |
-          ./twistcli sandbox --address $PRISMA_CLOUD_URL \
-                             --user ${{ secrets.PRISMA_USER }} \ 
-                             --password ${{ secrets.PRISMA_PASSWORD }} \
+          ./twistcli sandbox --address ${{ env.PRISMA_CLOUD_URL }} \
+                             --user ${{ secrets.TL_USER }} \
+                             --password ${{ secrets.TL_PASS }} \
                              --token ${{ secrets.PCC_API_TOKEN }} \
                              ubuntu:latest
 
