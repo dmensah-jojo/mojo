@@ -20,7 +20,7 @@ jobs:
       - name: Run Checkov Scan
         uses: bridgecrewio/checkov-action@master
         env:
-          PRISMA_API_URL: ${{ env.PRISMA_CLOUD_URL }}
+          PRISMA_API_URL: https://us-west1.cloud.twistlock.com/us-3-159214132
         with:
           api-key: ${{ secrets.BC_API_KEY }}
 
@@ -52,7 +52,7 @@ jobs:
 
       - name: Run Prisma Cloud Sandbox Scan
         run: |
-          ./twistcli sandbox --address https://us-west1.cloud.twistlock.com/us-3-159214132 \
+          sudo ./twistcli sandbox --address https://us-west1.cloud.twistlock.com/us-3-159214132 \
                              --user ${{ secrets.TL_USER }} \
                              --password ${{ secrets.TL_PASS }} \
                              --token ${{ secrets.PCC_API_TOKEN }} \
