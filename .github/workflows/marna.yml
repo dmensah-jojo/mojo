@@ -6,7 +6,8 @@ on:
       - main
   pull_request:
 
-#env:
+env:
+  TOKEN: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiZG1lbnNhaEBwYWxvYWx0b25ldHdvcmtzLmNvbSIsInJvbGUiOiJhZG1pbiIsInJvbGVQZXJtcyI6W1syNTUsMjU1LDI1NSwyNTUsMjU1LDk1XSxbMjU1LDI1NSwyNTUsMjU1LDI1NSw5NV1dLCJzZXNzaW9uVGltZW91dFNlYyI6NjAwLCJzYWFzVG9rZW4iOiJleUpoYkdjaU9pSklVekkxTmlKOS5leUp6ZFdJaU9pSmtiV1Z1YzJGb1FIQmhiRzloYkhSdmJtVjBkMjl5YTNNdVkyOXRJaXdpYzJWeWRtbGpaVlZ6WVdkbFQyNXNlU0k2ZEhKMVpTd2labWx5YzNSTWIyZHBiaUk2Wm1Gc2MyVXNJbkJ5YVhOdFlVbGtJam9pT0RBMk1EYzVPREUxTlRnME5qSTBOalF3SWl3aWFYQkJaR1J5WlhOeklqb2lNelF1T0RJdU1UTTRMakUxTWlJc0ltbHpjeUk2SW1oMGRIQnpPaTh2WVhCcE15NXdjbWx6YldGamJHOTFaQzVwYnlJc0luSmxjM1J5YVdOMElqb3dMQ0oxYzJWeVVtOXNaVlI1Y0dWRVpYUmhhV3h6SWpwN0ltaGhjMDl1YkhsU1pXRmtRV05qWlhOeklqcG1ZV3h6Wlgwc0luVnpaWEpTYjJ4bFZIbHdaVTVoYldVaU9pSlRlWE4wWlcwZ1FXUnRhVzRpTENKcGMxTlRUMU5sYzNOcGIyNGlPblJ5ZFdVc0lteGhjM1JNYjJkcGJsUnBiV1VpT2pFM05ESTNPRFF4TURJM01EZ3NJbUYxWkNJNkltaDBkSEJ6T2k4dllYQnBNeTV3Y21semJXRmpiRzkxWkM1cGJ5SXNJblZ6WlhKU2IyeGxWSGx3WlVsa0lqb3hMQ0poZFhSb0xXMWxkR2h2WkNJNklsTkJUVXd5SWl3aWMyVnNaV04wWldSRGRYTjBiMjFsY2s1aGJXVWlPaUpRY21semJXRkRiRzkxWkRNaUxDSnpaWE56YVc5dVZHbHRaVzkxZENJNk5qQXNJblZ6WlhKU2IyeGxTV1FpT2lJMlpHUmlaakZtWmkwMU56ZGtMVFF6WldJdE9UZGpZaTFsWlRCak5tTXdaV0ZrWkRraUxDSm9ZWE5FWldabGJtUmxjbEJsY20xcGMzTnBiMjV6SWpwMGNuVmxMQ0psZUhBaU9qRTNOREkzT1RrNU1qVXNJbWxoZENJNk1UYzBNamM1T1RNeU5Td2lkWE5sY201aGJXVWlPaUprYldWdWMyRm9RSEJoYkc5aGJIUnZibVYwZDI5eWEzTXVZMjl0SWl3aWRYTmxjbEp2YkdWT1lXMWxJam9pVUhKcGMyMWhJRU5zYjNWa0lGTkZJRlJsWVcwaWZRLjItR25UV1NGTmV5V1ZFa295X21SOGlZSkVPTXFvaW9nZ1VVWlVrdmJXVGciLCJpc3MiOiJ0d2lzdGxvY2siLCJleHAiOjE3NDI4MDI5MjV9.RdSv89zS8qL3BKDrIbn8CHQMzw9tz3eVSnA48UgvvOo" 
 #  PRISMA_CLOUD_URL: "https://api3.prismacloud.io"
 
 jobs:
@@ -56,7 +57,7 @@ jobs:
 
       - name: Run Prisma Cloud Sandbox Scan
         run: |
-          sudo ./twistcli sandbox --address https://us-west1.cloud.twistlock.com/us-3-159214132 --token {{ secrets.PCC_API_TOKEN }} --user 990c91e1-7ec0-4e59-878d-e793df85534b --password uDqCu9r+IsbqcISdG5FeYFddHzw= --analysis-duration 30s nginx:latest 
+          sudo ./twistcli sandbox --address https://us-west1.cloud.twistlock.com/us-3-159214132 --token $TOKEN --analysis-duration 30s nginx:latest 
 
          
 
