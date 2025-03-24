@@ -59,7 +59,7 @@ jobs:
           IMAGE_NAME="nginx:latest"
           OUTPUT_FILE="${{ github.workspace }}/output.log"
 
-          sudo ./twistcli sandbox --user 990c91e1-7ec0-4e59-878d-e793df85534b --password uDqCu9r+IsbqcISdG5FeYFddHzw= --token ${{ secrets.PCC_API_TOKEN }} --address https://us-west1.cloud.twistlock.com/us-3-159214132 --analysis-duration 30s --exit-on-error $IMAGE_NAME | tee $OUTPUT_FILE
+          sudo ./twistcli sandbox --address https://us-west1.cloud.twistlock.com/us-3-159214132 --token ${{ secrets.PCC_API_TOKEN }} --analysis-duration 30s --exit-on-error $IMAGE_NAME | tee $OUTPUT_FILE
 
           if grep -i 'Sandbox analysis verdict: FAIL' $OUTPUT_FILE; then
             echo "The dynamic image analysis result is FAIL."
