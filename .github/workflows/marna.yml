@@ -52,6 +52,5 @@ jobs:
 
       - name: Run TwistCLI Image Scan
         run: |
-            ./twistcli images scan --address https://us-west1.cloud.twistlock.com/us-3-159214132 --user 990c91e1-7ec0-4e59-878d-e793df85534b --password uDqCu9r+IsbqcISdG5FeYFddHzw= 
-            --details ubuntu:latest    
+            ./twistcli images scan --user 990c91e1-7ec0-4e59-878d-e793df85534b --password uDqCu9r+IsbqcISdG5FeYFddHzw=  --address https://us-west1.cloud.twistlock.com/us-3-159214132 --details ubuntu:latest    
              
