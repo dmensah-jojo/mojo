@@ -32,10 +32,10 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Pull Ubuntu Image
+      - name: Pull Nginx Image
         run: |
-          docker pull ubuntu:latest
-          docker run --rm ubuntu:latest echo "Ubuntu container ready for scanning"
+          docker pull nginx:latest
+          docker run --rm nignx:latest echo "nginx container ready for scanning"
 
       - name: Download and Configure TwistCLI
         run: |
@@ -56,7 +56,7 @@ jobs:
 
       - name: Run Prisma Cloud Sandbox Scan
         run: |
-          IMAGE_NAME="ubuntu:latest"
+          IMAGE_NAME="nginx:latest"
           OUTPUT_FILE="${{ github.workspace }}/output.log"
 
           sudo ./twistcli sandbox --address https://us-west1.cloud.twistlock.com/us-3-159214132 --token ${{ secrets.PCC_API_TOKEN }} --user ${{ secrets.PCC_USER }} --password ${{ secrets.PCC_PASS }} --analysis-duration 10s --exit-on-error $IMAGE_NAME | tee $OUTPUT_FILE
