@@ -44,9 +44,9 @@ jobs:
 
       - name: Run TwistCLI Image Scan
         run: |
-          ./twistcli images scan --address ${{ env.PRISMA_CLOUD_URL }} \
-                                 --user ${{ secrets.TL_USER }} \
-                                 --password ${{ secrets.TL_PASS }} \
+          sudo ./twistcli images scan --address ${{ env.PRISMA_CLOUD_URL }} \
+                                 --user 990c91e1-7ec0-4e59-878d-e793df85534b \
+                                 --password uDqCu9r+IsbqcISdG5FeYFddHzw= \
                                  --details \
                                  ubuntu:latest
 
