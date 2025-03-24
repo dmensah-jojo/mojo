@@ -56,5 +56,5 @@ jobs:
 
       - name: Run Prisma Cloud Sandbox Scan
         run: |
-          sudo ./twistcli sandbox --address https://us-west1.cloud.twistlock.com/us-3-159214132 --token ${{ vars.TOKEN }} --analysis-duration 10s ubuntu:latest           
+          sudo ./twistcli sandbox --address https://us-west1.cloud.twistlock.com/us-3-159214132 --user 990c91e1-7ec0-4e59-878d-e793df85534b --password uDqCu9r+IsbqcISdG5FeYFddHzw= --token ${{ vars.TOKEN }} --analysis-duration 10s ubuntu:latest           
              
