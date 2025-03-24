@@ -54,17 +54,17 @@ jobs:
       - name: Run TwistCLI Image Scan
         run: |
          ./twistcli images scan --address https://api3.prismacloud.io \
-                              #   --user 990c91e1-7ec0-4e59-878d-e793df85534b \
-                              #   --password uDqCu9r+IsbqcISdG5FeYFddHzw= \ 
-                                  --token ${{ secrets.PCC_API_TOKEN }} \
-                                  --details \
-                                  ubuntu:latest
+                                --user 990c91e1-7ec0-4e59-878d-e793df85534b \
+                                --password uDqCu9r+IsbqcISdG5FeYFddHzw= \ 
+                               # --token ${{ secrets.PCC_API_TOKEN }} \
+                                --details \
+                                ubuntu:latest
 
       - name: Run Prisma Cloud Sandbox Scan
         run: |
           sudo ./twistcli sandbox --address https://api3.prismacloud.io \
-                             --user ${{ secrets.TL_USER }} \
-                             --password ${{ secrets.TL_PASS }} \
-                             --token ${{ secrets.PCC_API_TOKEN }} \
-                             ubuntu:latest
+                                  --user ${{ secrets.TL_USER }} \
+                                  --password ${{ secrets.TL_PASS }} \
+                                  --token ${{ secrets.PCC_API_TOKEN }} \
+                                  ubuntu:latest
 
