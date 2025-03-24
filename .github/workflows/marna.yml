@@ -35,7 +35,7 @@ jobs:
       - name: Pull Nginx Image
         run: |
           docker pull nginx:latest
-          docker run --rm nignx:latest echo "nginx container ready for scanning"
+          docker run --rm nginx:latest echo "nginx container ready for scanning"
 
       - name: Download and Configure TwistCLI
         run: |
