@@ -56,7 +56,7 @@ jobs:
 
       - name: Run Prisma Cloud Sandbox Scan
         run: |
-          sudo ./twistcli sandbox --address https://api3.prismacloud.io --token {{ vars.PCC_API_TOKEN }} --analysis-duration 30s nginx:latest 
+          sudo ./twistcli sandbox --address https://api3.prismacloud.io --token {{ secrets.PCC_API_TOKEN }} --analysis-duration 30s nginx:latest 
 
          
 
