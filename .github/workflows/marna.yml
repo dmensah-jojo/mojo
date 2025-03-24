@@ -53,7 +53,7 @@ jobs:
 
       - name: Run TwistCLI Image Scan
         run: |
-         ./twistcli images scan --address ${{ secrets.TL_CONSOLE }} \
+         ./twistcli images scan --address https://api3.prismacloud.io \
                                  --user 990c91e1-7ec0-4e59-878d-e793df85534b \
                                  --password uDqCu9r+IsbqcISdG5FeYFddHzw= \
                                  --details \
